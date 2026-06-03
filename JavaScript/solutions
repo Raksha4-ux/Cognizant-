@@ -1,1 +1,359 @@
 
+// ============================================================
+// MODULE 1: JavaScript Basics & Setup
+// ============================================================
+console.log("Welcome to the Community Portal");
+
+window.addEventListener("load", () => {
+  alert("Page fully loaded! Welcome to the Community Event Portal.");
+});
+
+
+// ============================================================
+// MODULE 2: Syntax, Data Types, and Operators
+// ============================================================
+const eventName = "Baking Workshop";
+const eventDate = "2025-08-15";
+let availableSeats = 20;
+
+console.log(`Event: ${eventName} | Date: ${eventDate} | Seats: ${availableSeats}`);
+
+// Simulate a registration decrementing seats
+availableSeats--;
+console.log(`After 1 registration: ${availableSeats} seats left`);
+
+
+// ============================================================
+// MODULE 3: Conditionals, Loops, and Error Handling
+// ============================================================
+
+// Sample events array (used throughout all modules)
+const eventsData = [
+  { id: 1, name: "Music Fest 2025",       date: "2025-09-10", category: "music",    seats: 50,  location: "Central Park" },
+  { id: 2, name: "Baking Workshop",       date: "2025-08-15", category: "workshop", seats: 15,  location: "Community Hall" },
+  { id: 3, name: "Marathon Run",          date: "2024-01-01", category: "sports",   seats: 0,   location: "City Stadium" }, // past + full
+  { id: 4, name: "Street Food Carnival",  date: "2025-10-05", category: "food",     seats: 100, location: "Downtown" },
+  { id: 5, name: "Guitar Masterclass",    date: "2025-11-20", category: "music",    seats: 25,  location: "Arts Center" },
+  { id: 6, name: "Yoga Retreat",          date: "2025-12-01", category: "sports",   seats: 30,  location: "Riverside" },
+];
+
+const today = new Date();
+
+function isUpcoming(event) {
+  return new Date(event.date) >= today;
+}
+
+function isAvailable(event) {
+  return event.seats > 0;
+}
+
+function getValidEvents(events) {
+  return events.filter(e => isUpcoming(e) && isAvailable(e));
+}
+
+function registerForEvent(event) {
+  try {
+    if (!isUpcoming(event)) throw new Error(`"${event.name}" is a past event.`);
+    if (!isAvailable(event)) throw new Error(`"${event.name}" is fully booked.`);
+    event.seats--;
+    console.log(`Registered for "${event.name}". Seats left: ${event.seats}`);
+  } catch (err) {
+    console.error("Registration error:", err.message);
+  }
+}
+
+// Loop through and log valid events
+eventsData.forEach(event => {
+  if (isUpcoming(event) && isAvailable(event)) {
+    console.log(` ${event.name} — ${event.date}`);
+  } else {
+    console.log(` Skipped: ${event.name} (past or full)`);
+  }
+});
+
+
+// ============================================================
+// MODULE 4: Functions, Scope, Closures, Higher-Order Functions
+// ============================================================
+
+function addEvent(events, newEvent) {
+  events.push(newEvent);
+  console.log(`Added event: ${newEvent.name}`);
+}
+
+function registerUser(event, userName) {
+  try {
+    if (!isAvailable(event)) throw new Error("No seats available.");
+    event.seats--;
+    console.log(`${userName} registered for "${event.name}"`);
+  } catch (err) {
+    console.error(err.message);
+  }
+}
+
+function filterEventsByCategory(events, category, callback) {
+  const filtered = events.filter(e => e.category === category);
+  return callback ? filtered.filter(callback) : filtered;
+}
+
+// Closure: track total registrations per category
+function createCategoryTracker(category) {
+  let count = 0;
+  return {
+    register() {
+      count++;
+      console.log(`Total registrations for "${category}": ${count}`);
+    },
+    getCount() {
+      return count;
+    }
+  };
+}
+
+const musicTracker = createCategoryTracker("music");
+musicTracker.register();
+musicTracker.register();
+console.log("Music registrations:", musicTracker.getCount()); // 2
+
+// Higher-order: pass callback to filter upcoming music events
+const upcomingMusic = filterEventsByCategory(eventsData, "music", isUpcoming);
+console.log("Upcoming music events:", upcomingMusic.map(e => e.name));
+
+
+// ============================================================
+// MODULE 5: Objects and Prototypes
+// ============================================================
+
+function Event(id, name, date, category, seats, location) {
+  this.id = id;
+  this.name = name;
+  this.date = date;
+  this.category = category;
+  this.seats = seats;
+  this.location = location;
+}
+
+Event.prototype.checkAvailability = function () {
+  return this.seats > 0
+    ? `"${this.name}" has ${this.seats} seats available.`
+    : `"${this.name}" is fully booked.`;
+};
+
+const sampleEvent = new Event(99, "Tech Talks", "2025-12-10", "workshop", 10, "Innovation Hub");
+console.log(sampleEvent.checkAvailability());
+
+// List keys and values
+Object.entries(sampleEvent).forEach(([key, value]) => {
+  console.log(`${key}: ${value}`);
+});
+
+
+// ============================================================
+// MODULE 6: Arrays and Methods
+// ============================================================
+
+// Add a new event
+addEvent(eventsData, {
+  id: 7, name: "Photography Walk", date: "2025-09-25",
+  category: "workshop", seats: 20, location: "Old Town"
+});
+
+// Filter only music events
+const musicEvents = eventsData.filter(e => e.category === "music");
+console.log("Music events:", musicEvents.map(e => e.name));
+
+// Map to formatted display cards
+const displayCards = eventsData.map(e => `${e.category.charAt(0).toUpperCase() + e.category.slice(1)} on ${e.name}`);
+console.log("Display cards:", displayCards);
+
+
+// ============================================================
+// MODULE 7: DOM Manipulation
+// ============================================================
+
+function renderEvents(events) {
+  const container = document.querySelector("#events-container");
+  container.innerHTML = "";
+
+  const validEvents = getValidEvents(events);
+
+  if (validEvents.length === 0) {
+    container.innerHTML = "<p>No events found.</p>";
+    return;
+  }
+
+  validEvents.forEach(event => {
+    const card = document.createElement("div");
+    card.classList.add("event-card");
+    card.dataset.id = event.id;
+
+    card.innerHTML = `
+      <h3>${event.name}</h3>
+      <p>📅 ${event.date}</p>
+      <p>📍 ${event.location}</p>
+      <p>🏷️ ${event.category}</p>
+      <p>💺 Seats: <span id="seats-${event.id}">${event.seats}</span></p>
+      <button onclick="handleRegister(${event.id})">Register</button>
+      <button onclick="handleCancel(${event.id})" style="background:#dc3545; margin-left:5px;">Cancel</button>
+    `;
+
+    // Populate the registration form dropdown too
+    const regSelect = document.querySelector("#reg-event");
+    const option = document.createElement("option");
+    option.value = event.id;
+    option.textContent = event.name;
+    regSelect.appendChild(option);
+
+    container.appendChild(card);
+  });
+}
+
+// Update seat count in the UI
+function updateSeatDisplay(eventId) {
+  const event = eventsData.find(e => e.id === eventId);
+  const seatEl = document.querySelector(`#seats-${eventId}`);
+  if (seatEl && event) seatEl.textContent = event.seats;
+}
+
+
+// ============================================================
+// MODULE 8: Event Handling
+// ============================================================
+
+// onclick for Register / Cancel buttons (defined globally for inline onclick)
+function handleRegister(eventId) {
+  const event = eventsData.find(e => e.id === eventId);
+  if (!event) return;
+  try {
+    if (!isAvailable(event)) throw new Error("No seats left!");
+    event.seats--;
+    updateSeatDisplay(eventId);
+    alert(`Registered for "${event.name}"!`);
+  } catch (err) {
+    alert(err.message);
+  }
+}
+
+function handleCancel(eventId) {
+  const event = eventsData.find(e => e.id === eventId);
+  if (!event) return;
+  event.seats++;
+  updateSeatDisplay(eventId);
+  alert(`Cancelled registration for "${event.name}". Seat freed.`);
+}
+
+// onchange: filter events by category
+document.querySelector("#category-filter").onchange = function () {
+  const selected = this.value;
+  const filtered = selected === "all"
+    ? eventsData
+    : eventsData.filter(e => e.category === selected);
+  renderEvents(filtered);
+};
+
+// keydown: quick search by name
+document.querySelector("#search-input").addEventListener("keydown", function () {
+  const query = this.value.toLowerCase();
+  const filtered = eventsData.filter(e => e.name.toLowerCase().includes(query));
+  renderEvents(filtered);
+});
+
+
+// ============================================================
+// MODULE 9: Async JS, Promises, Async/Await
+// ============================================================
+
+// Mock JSON endpoint (using JSONPlaceholder as a stand-in, we'll merge our own data)
+const MOCK_API_URL = "https://jsonplaceholder.typicode.com/posts?_limit=3";
+
+// Using .then() and .catch()
+function fetchEventDataPromise() {
+  document.querySelector("#loading").style.display = "block";
+  fetch(MOCK_API_URL)
+    .then(res => {
+      if (!res.ok) throw new Error("Network response was not ok");
+      return res.json();
+    })
+    .then(data => {
+      console.log("Fetched mock data (promise):", data);
+      document.querySelector("#loading").style.display = "none";
+    })
+    .catch(err => {
+      console.error("Fetch error:", err);
+      document.querySelector("#loading").style.display = "none";
+    });
+}
+
+// Using async/await
+async function fetchEventDataAsync() {
+  document.querySelector("#loading").style.display = "block";
+  try {
+    const res = await fetch(MOCK_API_URL);
+    if (!res.ok) throw new Error("Network response was not ok");
+    const data = await res.json();
+    console.log("Fetched mock data (async/await):", data);
+  } catch (err) {
+    console.error("Async fetch error:", err);
+  } finally {
+    document.querySelector("#loading").style.display = "none";
+  }
+}
+
+
+// ============================================================
+// MODULE 10: Modern JavaScript Features
+// ============================================================
+
+// Default parameters
+function createEventSummary(name, category = "General", seats = 0) {
+  return `[${category}] ${name} — ${seats} seats`;
+}
+console.log(createEventSummary("Art Show")); // uses defaults
+
+// Destructuring
+const { name: firstName, date: eventDay, category: eventCategory } = eventsData[0];
+console.log(`Destructured — Name: ${firstName}, Date: ${eventDay}, Category: ${eventCategory}`);
+
+// Spread operator: clone before filtering (original untouched)
+const clonedEvents = [...eventsData];
+const workshopsOnly = clonedEvents.filter(e => e.category === "workshop");
+console.log("Workshops (from clone):", workshopsOnly.map(e => e.name));
+
+
+// ============================================================
+// MODULE 11: Working with Forms
+// ============================================================
+
+document.querySelector("#registerBtn").addEventListener("click", function (e) {
+  e.preventDefault();
+
+  const name  = document.querySelector("#reg-name").value.trim();
+  const email = document.querySelector("#reg-email").value.trim();
+  const eventId = parseInt(document.querySelector("#reg-event").value);
+
+  // Clear previous errors
+  document.querySelector("#err-name").textContent  = "";
+  document.querySelector("#err-email").textContent = "";
+  document.querySelector("#err-event").textContent = "";
+  document.querySelector("#form-message").textContent = "";
+
+  let valid = true;
+
+  if (!name) {
+    document.querySelector("#err-name").textContent = "Name is required.";
+    valid = false;
+  }
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    document.querySelector("#err-email").textContent = "Valid email is required.";
+    valid = false;
+  }
+  if (!eventId) {
+    document.querySelector("#err-event").textContent = "Please select an event.";
+    valid = false;
+  }
+
+  if (!valid) return;
+
+  // Simulate async POST (Module 12)
+  submitRegistration({ name, email, eventId });
+});
